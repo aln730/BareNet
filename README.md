@@ -14,3 +14,6 @@ To-Do:
 
 
 git-gud at low-level networking and systems programming
+
+(kinda works, need to fix limine verions)
+![image](https://github.com/user-attachments/assets/72d6eb09-67cf-41ce-8a7d-ee8892bb0321)
