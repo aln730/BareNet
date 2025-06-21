@@ -120,7 +120,7 @@ iso: bin/$(OUTPUT)
 		-efi-boot-part --efi-boot-image --protective-msdos-label \
 		$(ISO_ROOT) -o $(ISO_NAME)
 
-	./limine-deploy $(ISO_NAME)
+	./limine-deploy bios-install $(ISO_NAME)
 
 # Run ISO in QEMU
 .PHONY: run
