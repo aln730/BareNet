@@ -1,40 +1,29 @@
-GNUmakefile
+# GNUmakefile for RayNet Kernel Project
 
-In order to build our kernel, we are going to use a Makefile. Since we're going to use GNU make specific features, we call this file GNUmakefile instead, so only GNU make will process it.
-
-# Nuke built-in rules and variables.
 MAKEFLAGS += -rR
 .SUFFIXES:
 
-# This is the name that our final executable will have.
-# Change as needed.
-override OUTPUT := myos
+override OUTPUT := RayNet
 
-# User controllable C compiler command.
 CC := cc
 
-# User controllable C flags.
 CFLAGS := -g -O2 -pipe
 
-# User controllable C preprocessor flags. We set none by default.
 CPPFLAGS :=
 
-# User controllable nasm flags.
 NASMFLAGS := -F dwarf -g
 
-# User controllable linker flags. We set none by default.
+# Linker flags (user-defined)
 LDFLAGS :=
 
-# Check if CC is Clang.
 override CC_IS_CLANG := $(shell ! $(CC) --version 2>/dev/null | grep 'clang' >/dev/null 2>&1; echo $$?)
 
-# If the C compiler is Clang, set the target as needed.
 ifeq ($(CC_IS_CLANG),1)
     override CC += \
         -target x86_64-unknown-none
 endif
 
-# Internal C flags that should not be changed by the user.
+# Required flags for kernel development (do not remove)
 override CFLAGS += \
     -Wall \
     -Wextra \
@@ -52,7 +41,7 @@ override CFLAGS += \
     -mno-red-zone \
     -mcmodel=kernel
 
-# Internal C preprocessor flags that should not be changed by the user.
+# Internal preprocessor flags for Limine + header deps
 override CPPFLAGS := \
     -I src \
     $(CPPFLAGS) \
@@ -60,12 +49,12 @@ override CPPFLAGS := \
     -MMD \
     -MP
 
-# Internal nasm flags that should not be changed by the user.
+# Extra internal NASM flags (for 64-bit ELF output)
 override NASMFLAGS += \
     -Wall \
     -f elf64
 
-# Internal linker flags that should not be changed by the user.
+# Linker flags (must include linker.ld and disable standard linking)
 override LDFLAGS += \
     -Wl,-m,elf_x86_64 \
     -Wl,--build-id=none \
@@ -74,8 +63,7 @@ override LDFLAGS += \
     -z max-page-size=0x1000 \
     -T linker.ld
 
-# Use "find" to glob all *.c, *.S, and *.asm files in the tree and obtain the
-# object and header dependency file names.
+# Gather all source files in src/ directory
 override SRCFILES := $(shell cd src && find -L * -type f | LC_ALL=C sort)
 override CFILES := $(filter %.c,$(SRCFILES))
 override ASFILES := $(filter %.S,$(SRCFILES))
@@ -83,34 +71,58 @@ override NASMFILES := $(filter %.asm,$(SRCFILES))
 override OBJ := $(addprefix obj/,$(CFILES:.c=.c.o) $(ASFILES:.S=.S.o) $(NASMFILES:.asm=.asm.o))
 override HEADER_DEPS := $(addprefix obj/,$(CFILES:.c=.c.d) $(ASFILES:.S=.S.d))
 
-# Default target. This must come first, before header dependencies.
+# Default target: build final kernel ELF
 .PHONY: all
 all: bin/$(OUTPUT)
 
-# Include header dependencies.
+# Include header dependencies
 -include $(HEADER_DEPS)
 
-# Link rules for the final executable.
+# Link final kernel ELF from object files
 bin/$(OUTPUT): GNUmakefile linker.ld $(OBJ)
 	mkdir -p "$$(dirname $@)"
 	$(CC) $(CFLAGS) $(LDFLAGS) $(OBJ) -o $@
 
-# Compilation rules for *.c files.
+# Compile C files
 obj/%.c.o: src/%.c GNUmakefile
 	mkdir -p "$$(dirname $@)"
 	$(CC) $(CFLAGS) $(CPPFLAGS) -c $< -o $@
 
-# Compilation rules for *.S files.
+# Compile assembly files (.S)
 obj/%.S.o: src/%.S GNUmakefile
 	mkdir -p "$$(dirname $@)"
 	$(CC) $(CFLAGS) $(CPPFLAGS) -c $< -o $@
 
-# Compilation rules for *.asm (nasm) files.
+# Assemble NASM files (.asm)
 obj/%.asm.o: src/%.asm GNUmakefile
 	mkdir -p "$$(dirname $@)"
 	nasm $(NASMFLAGS) $< -o $@
 
-# Remove object files and the final executable.
+# Clean all build artifacts
 .PHONY: clean
 clean:
-	rm -rf bin obj
+	rm -rf bin obj isodir RayNet.iso
+
+# Build ISO image using Limine
+ISO_ROOT := isodir
+ISO_NAME := RayNet.iso
+
+.PHONY: iso
+iso: bin/$(OUTPUT)
+	rm -rf $(ISO_ROOT)
+	mkdir -p $(ISO_ROOT)/boot
+	cp bin/$(OUTPUT) $(ISO_ROOT)/boot/RayNet
+	cp limine.cfg limine.sys limine-cd.bin limine-eltorito-efi.bin $(ISO_ROOT)/boot/
+	xorriso -as mkisofs \
+		-b boot/limine-cd.bin \
+		-no-emul-boot -boot-load-size 4 -boot-info-table \
+		--efi-boot boot/limine-eltorito-efi.bin \
+		-efi-boot-part --efi-boot-image --protective-msdos-label \
+		$(ISO_ROOT) -o $(ISO_NAME)
+
+	./limine-deploy $(ISO_NAME)
+
+# Run ISO in QEMU
+.PHONY: run
+run: iso
+	qemu-system-x86_64 -cdrom $(ISO_NAME)
