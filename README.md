@@ -1,7 +1,7 @@
 Goal: Build a mini, bare-metal network stack for `x86`. It will run without an operating system and handle raw Ethernet frames, enabling low-level packet handling and protocal implementation.
 
 To-Do:
-- [ ] Bootable x86 kernel using GRUB
+- [ ] Bootable x86 kernel using limine
 - [ ] Ethernet frame parsing
 - [ ] ARP resolution and replies
 - [ ] packet routing
