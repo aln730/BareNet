@@ -2,6 +2,7 @@ Goal: Build a mini, bare-metal network stack for `x86`. It will run without an o
 
 To-Do:
 - [X] Bootable x86 kernel using limine
+- [ ] Implement GRUB
 - [ ] Ethernet frame parsing
 - [ ] ARP resolution and replies
 - [ ] packet routing
