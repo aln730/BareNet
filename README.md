@@ -6,11 +6,11 @@ To-Do:
 - [ ] Ethernet frame parsing
 - [ ] ARP resolution and replies
 - [ ] packet routing
-- [ ] Ping suppoort
+- [ ] Ping support
 
 
 - Language: C, x86 Assembly
 - Tools: QEMU, NASM, GRUB (soonTM)
-- Architecture: x86(32-bit), Bare Metal
+- Architecture: x86(64-bit), Bare Metal
 
 git-gud at low-level networking and systems programming
