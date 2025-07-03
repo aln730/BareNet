@@ -1,6 +1,8 @@
 #include <stdint.h>
 #include <stddef.h>
 #include <limine.h>
+#include "arch/x86_64/gdt.h"
+
 
 __attribute__((used, section(".limine_requests")))
 static struct limine_memmap_request memmap_request = {
@@ -44,6 +46,7 @@ void _start(void) {
 }
 
 void kmain(void) {
+    gdt_init();
     // Kernel loop placeholder
     for (;;) __asm__("hlt");
 }
