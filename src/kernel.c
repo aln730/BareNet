@@ -2,6 +2,7 @@
 #include <stddef.h>
 #include <limine.h>
 #include "arch/x86_64/gdt/gdt.h"
+#include "arch/x86_64/idt/idt.h"
 
 
 __attribute__((used, section(".limine_requests")))
@@ -47,6 +48,7 @@ void _start(void) {
 
 void kmain(void) {
     gdt_init();
+    idt_init();
     // Kernel loop placeholder
     for (;;) __asm__("hlt");
 }
