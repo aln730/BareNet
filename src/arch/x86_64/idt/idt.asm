@@ -1,12 +1,7 @@
-section .text
-global idt_load
-
+.intel_syntax noprefix
+.global idt_load
+.text
 
 idt_load:
-    mov rax, [rdi]
     lidt [rdi]
     ret
-
-
-
-    
