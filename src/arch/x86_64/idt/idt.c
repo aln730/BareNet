@@ -1,6 +1,8 @@
 #include "idt.h"
 #include <stddef.h> 
 extern void idt_load(idtr_t*);
+extern void* isr_stub_table[32];
+
 
 static idt_entry_t idt[IDT_ENTRIES] __attribute__((aligned(16)));
 static idtr_t idtr;
@@ -22,7 +24,9 @@ void idt_init(void) {
     for (size_t i = 0; i < IDT_ENTRIES; i++)
         idt[i] = (idt_entry_t){0};
 
-    idt_set_entry(0, isr_stub_0, 0x8E);
+    for(int i = 0; i < 32; i++){
+        idt_set_entry(i, isr_stub_table[i], 0x8E);
+    }
 
     idtr.limit = sizeof(idt) - 1;
     idtr.base  = (uint64_t)&idt;

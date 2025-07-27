@@ -1,7 +1,6 @@
-.intel_syntax noprefix
-.global idt_load
-.text
+global idt_load
 
+section .text
 idt_load:
     lidt [rdi]
     ret
